@@ -15,4 +15,4 @@ class Client():
 		tcp.close()
 
 if __name__=="__main__":
-	client = Client('127.0.0.1',5011)
+	client = Client('127.0.0.1',5003)
