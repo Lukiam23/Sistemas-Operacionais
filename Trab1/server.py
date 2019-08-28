@@ -1,41 +1,49 @@
 import socket
 import threading
 
-threads = []
-
 class Server():
 	def __init__(self,host,port):
+		self.event = threading.Event()
 		self.connection = True
-		tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		origin = (host,port)
-		tcp.bind(origin)
-		tcp.listen(2)
-		self.listener = threading.Thread(target = self.listen,args = (tcp,))
-		self.listener.start()
+		self.tcp.bind(origin)
+		self.tcp.listen(2)
+		
 
-	def read(self,con,cliente,tcp):
-		while True:
-			msg = con.recv(1024)
-			msg = msg.decode()
-			if msg == "exit" :
+	def read(self,con,cliente):
+		msg = ''
+		while self.connection:
+			msg = con.recv(1024).decode()
+			if msg == "exit":
 				self.connection = False
-				tcp.close()
+				self.event.set()
 			print(cliente,":",msg)
 		con.close()
 		
-
-	def listen(self,tcp):
-		print("Server Escutando")
+		
+	def conWatcher(self):
 		while self.connection:
-			con, cliente = tcp.accept()
-			creator = threading.Thread(target = self.read,args = (con,cliente,tcp,))
-			threads.append(creator)
-			creator.start()
-		tcp.close()
+			try:
+				con, cliente = self.tcp.accept()
+				creator = threading.Thread(target = self.read,args = (con,cliente,))
+				creator.start()
+			except:
+				pass
+
+	def run(self):
+		print("Server Escutando")
+		self.accept = threading.Thread(target = self.conWatcher)
+		self.accept.start()
+		if self.event.wait():
+			self.tcp.shutdown(2)
+			self.tcp.close()
+			
 		print("Servidor Desligado")
 
 
 
 if __name__=="__main__":
-	sever = Server('',5003)
-
+	server = Server('',5020)
+	server.run()
+	
