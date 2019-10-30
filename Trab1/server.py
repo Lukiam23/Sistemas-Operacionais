@@ -3,6 +3,7 @@ import threading
 
 class Server():
 	def __init__(self,host,port):
+		self.cons = []
 		self.event = threading.Event()
 		self.connection = True
 		self.tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,13 +20,15 @@ class Server():
 				self.connection = False
 				self.event.set()
 			print(cliente,":",msg)
-		con.close()
+		for i in self.cons:
+			i.close()
 		
 		
 	def conWatcher(self):
 		while self.connection:
 			try:
 				con, cliente = self.tcp.accept()
+				self.cons.append(con)
 				creator = threading.Thread(target = self.read,args = (con,cliente,))
 				creator.start()
 			except:
@@ -36,7 +39,7 @@ class Server():
 		self.accept = threading.Thread(target = self.conWatcher)
 		self.accept.start()
 		if self.event.wait():
-			self.tcp.shutdown(2)
+			#self.tcp.shutdown(2)
 			self.tcp.close()
 			
 		print("Servidor Desligado")
@@ -44,6 +47,6 @@ class Server():
 
 
 if __name__=="__main__":
-	server = Server('',5020)
+	server = Server('',5000)
 	server.run()
 	
